@@ -1,0 +1,64 @@
+# RSA Algorithm - Educational Implementation
+
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+def mod_inverse(e, phi):
+    # Extended Euclidean Algorithm
+    old_r, r = phi, e
+    old_s, s = 1, 0
+    while r:
+        q = old_r // r
+        old_r, r = r, old_r - q * r
+        old_s, s = s, old_s - q * s
+    return old_s % phi
+
+def is_prime(n):
+    if n <= 1:
+        return False
+    for i in range(2, int(n**0.5)+1):
+        if n % i == 0:
+            return False
+    return True
+
+def generate_keys(p, q):
+    if not (is_prime(p) and is_prime(q)):
+        raise ValueError("Both numbers must be prime.")
+
+    n = p * q
+    phi = (p - 1) * (q - 1)
+
+    # Choose e
+    e = 3
+    while gcd(e, phi) != 1:
+        e += 2
+
+    d = mod_inverse(e, phi)
+    return ((e, n), (d, n))
+
+def encrypt(msg, pub_key):
+    e, n = pub_key
+    return [pow(ord(char), e, n) for char in msg]
+
+def decrypt(cipher, priv_key):
+    d, n = priv_key
+    return ''.join([chr(pow(c, d, n)) for c in cipher])
+
+# === Demo ===
+if __name__ == "__main__":
+    # Small primes for demo (use large primes in real RSA)
+    p = 17
+    q = 23
+
+    public_key, private_key = generate_keys(p, q)
+
+    message = "Hi"
+    print("Original Message:", message)
+
+    encrypted = encrypt(message, public_key)
+    print("Encrypted Message:", encrypted)
+
+    decrypted = decrypt(encrypted, private_key)
+    print("Decrypted Message:", decrypted)

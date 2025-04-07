@@ -1,0 +1,70 @@
+# Simple AES-like cipher for educational/demo use only
+
+# 4x4 S-box (tiny version for demo)
+s_box = {
+    '0': 'E', '1': '4', '2': 'D', '3': '1',
+    '4': '2', '5': 'F', '6': 'B', '7': '8',
+    '8': '3', '9': 'A', 'A': '6', 'B': 'C',
+    'C': '5', 'D': '9', 'E': '0', 'F': '7'
+}
+
+# Inverse S-box
+inv_s_box = {v: k for k, v in s_box.items()}
+
+# SubBytes step
+def sub_bytes(state):
+    return [s_box[c] for c in state]
+
+# InvSubBytes step
+def inv_sub_bytes(state):
+    return [inv_s_box[c] for c in state]
+
+# ShiftRows step (simulate 2x2 matrix for simplicity)
+def shift_rows(state):
+    # 2x2 matrix represented as flat list [a, b, c, d]
+    return [state[0], state[1], state[3], state[2]]
+
+# Inverse ShiftRows
+def inv_shift_rows(state):
+    return [state[0], state[1], state[3], state[2]]
+
+# AddRoundKey (XOR each char as hex)
+def add_round_key(state, key):
+    return [format(int(s, 16) ^ int(k, 16), 'X') for s, k in zip(state, key)]
+
+# Encrypt function (1 round mini AES)
+def mini_aes_encrypt(plaintext, key):
+    # Convert to hex characters (limit to 4 characters)
+    pt_hex = [format(ord(c), 'X') for c in plaintext][:4]
+    key_hex = [format(ord(c), 'X') for c in key][:4]
+
+    state = add_round_key(pt_hex, key_hex)
+    state = sub_bytes(state)
+    state = shift_rows(state)
+    state = add_round_key(state, key_hex)
+
+    return ''.join(state)
+
+# Decrypt function
+def mini_aes_decrypt(ciphertext, key):
+    state = list(ciphertext)
+    key_hex = [format(ord(c), 'X') for c in key][:4]
+
+    state = add_round_key(state, key_hex)
+    state = inv_shift_rows(state)
+    state = inv_sub_bytes(state)
+    state = add_round_key(state, key_hex)
+
+    # Convert back to characters
+    return ''.join([chr(int(c, 16)) for c in state])
+
+# Demo
+if __name__ == "__main__":
+    plaintext = "Hiya"
+    key = "Key!"
+
+    print("Plaintext:", plaintext)
+    encrypted = mini_aes_encrypt(plaintext, key)
+    print("Encrypted:", encrypted)
+    decrypted = mini_aes_decrypt(encrypted, key)
+    print("Decrypted:", decrypted)

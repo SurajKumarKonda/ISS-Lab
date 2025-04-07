@@ -1,0 +1,74 @@
+# Sample 6-bit DES-like encryption (toy example)
+
+# XOR function
+def xor(a, b):
+    return ''.join(['0' if i == j else '1' for i, j in zip(a, b)])
+
+# Simple permutation
+def permute(bits, table):
+    return ''.join([bits[i] for i in table])
+
+# Key Generation (very simplified)
+def generate_keys(key):
+    key = key[:6]  # Use only 6 bits
+    round_keys = [key, key[::-1]]  # 2 round keys: original + reversed
+    return round_keys
+
+# F-function (mini round function)
+def f_function(right, key):
+    # Expand 3 bits to 6 bits (very basic expansion)
+    expand_table = [0, 1, 2, 1, 2, 0]
+    expanded = permute(right, expand_table)
+    # XOR with key
+    xored = xor(expanded, key)
+    # Simple substitution (mock)
+    sbox = {
+        '000000': '000',
+        '000111': '001',
+        '111000': '110',
+        '111111': '111',
+        '101010': '011',
+        '010101': '100'
+    }
+    return sbox.get(xored, xored[:3])  # Return substituted or fallback to first 3 bits
+
+# Encrypt one 6-bit block
+def encrypt_block(plain_block, keys):
+    left = plain_block[:3]
+    right = plain_block[3:]
+    
+    for key in keys:
+        temp = right
+        right = xor(left, f_function(right, key))
+        left = temp
+    return left + right
+
+# Decrypt one 6-bit block (reverse keys)
+def decrypt_block(cipher_block, keys):
+    return encrypt_block(cipher_block, keys[::-1])
+
+# Convert string to binary
+def str_to_bin(text):
+    return ''.join(format(ord(c), '08b') for c in text)
+
+# Convert binary to string
+def bin_to_str(binary):
+    chars = [binary[i:i+8] for i in range(0, len(binary), 8)]
+    return ''.join([chr(int(b, 2)) for b in chars])
+
+# Demo
+if __name__ == "__main__":
+    plaintext = "A"  # single character
+    key = "101010"   # 6-bit toy key
+    keys = generate_keys(key)
+
+    print("Original Text:", plaintext)
+
+    # Convert to binary and take first 6 bits
+    binary_input = str_to_bin(plaintext)[:6]
+    encrypted = encrypt_block(binary_input, keys)
+    decrypted = decrypt_block(encrypted, keys)
+
+    print("Binary Input :", binary_input)
+    print("Encrypted Bin:", encrypted)
+    print("Decrypted Bin:", decrypted)
